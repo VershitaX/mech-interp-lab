@@ -43,7 +43,7 @@ checkpoints/             # saved model + training metrics (checkpoint weights gi
 ## See it working (2 minutes)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/mech-interp-lab.git
+git clone https://github.com/VershitaX/mech-interp-lab.git
 cd mech-interp-lab
 python3 -m venv .venv && source .venv/bin/activate      # optional but recommended
 pip install -r requirements.txt
