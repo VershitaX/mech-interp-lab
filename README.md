@@ -107,7 +107,34 @@ print(neuron_periodicity(model, p, top_k=10))
 # Causally test one neuron: does ablating it hurt accuracy?
 inputs, labels = make_dataset(p=p)
 print(neuron_ablation_effect(model, inputs, labels, layer=0, neuron=0))
+
+
+
+
+
+
 ```
+## Results
+
+Running the full setup (p=113, 15,000 epochs, weight decay=1.0) reproduces
+grokking cleanly:
+
+![Training curve](figures/training_curve.png)
+
+- **Epoch ~200-300**: train accuracy saturates to 100% — the model has
+  memorized the training set.
+- **Epoch ~300-7,000**: test accuracy stays low (5-15%), near random — the
+  "grokking gap." The model has memorized but not yet found the general rule.
+- **Epoch ~7,000-10,500**: test accuracy climbs sharply and reaches 100% —
+  the model suddenly generalizes to unseen (a, b) pairs. This is grokking.
+
+This confirms the phenomenon reported in Power et al. (2022) and Nanda et
+al. (2023): with weight decay pushing the model away from a purely
+memorized solution, continued training past 100% train accuracy eventually
+produces a generalizing circuit, well after loss has already reached zero.
+
+
+
 
 ## Roadmap
 
