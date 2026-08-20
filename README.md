@@ -43,7 +43,7 @@ checkpoints/             # saved model + training metrics (checkpoint weights gi
 ## See it working (2 minutes)
 
 ```bash
-git clone https://github.com/VershitaX/mech-interp-lab.git
+git clone https://github.com/YOUR_USERNAME/mech-interp-lab.git
 cd mech-interp-lab
 python3 -m venv .venv && source .venv/bin/activate      # optional but recommended
 pip install -r requirements.txt
@@ -74,6 +74,23 @@ Watch `checkpoints/metrics.csv` grow, or re-plot at any time with:
 ```bash
 python -c "import sys; sys.path.insert(0,'src/interp'); from visualize import plot_training_curve; plot_training_curve('checkpoints/metrics.csv')"
 ```
+
+## Interactive demo
+
+There's a Streamlit app so you can play with the model directly instead of
+just reading plots: type in two numbers, watch the model predict their sum
+mod p, and see the live attention pattern behind that prediction — plus
+tabs for the training curve, Fourier analysis, and neuron periodicity.
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+This opens in your browser automatically. If no trained checkpoint exists
+yet at `checkpoints/model.pt`, the app trains a small one on the spot
+(~10-20 seconds) so it always works out of the box — for the real grokking
+result, run `python demo.py --full` first, then launch the app.
 
 ## Run the tests
 
@@ -107,34 +124,7 @@ print(neuron_periodicity(model, p, top_k=10))
 # Causally test one neuron: does ablating it hurt accuracy?
 inputs, labels = make_dataset(p=p)
 print(neuron_ablation_effect(model, inputs, labels, layer=0, neuron=0))
-
-
-
-
-
-
 ```
-## Results
-
-Running the full setup (p=113, 15,000 epochs, weight decay=1.0) reproduces
-grokking cleanly:
-
-![Training curve](figures/training_curve.png)
-
-- **Epoch ~200-300**: train accuracy saturates to 100% — the model has
-  memorized the training set.
-- **Epoch ~300-7,000**: test accuracy stays low (5-15%), near random — the
-  "grokking gap." The model has memorized but not yet found the general rule.
-- **Epoch ~7,000-10,500**: test accuracy climbs sharply and reaches 100% —
-  the model suddenly generalizes to unseen (a, b) pairs. This is grokking.
-
-This confirms the phenomenon reported in Power et al. (2022) and Nanda et
-al. (2023): with weight decay pushing the model away from a purely
-memorized solution, continued training past 100% train accuracy eventually
-produces a generalizing circuit, well after loss has already reached zero.
-
-
-
 
 ## Roadmap
 
