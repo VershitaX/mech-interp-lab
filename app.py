@@ -37,7 +37,15 @@ st.set_page_config(page_title="Mech Interp Lab", page_icon="🧠", layout="wide"
 @st.cache_resource(show_spinner=False)
 def get_model():
     """Load a saved checkpoint if one exists; otherwise train a small
-    model on the fly so the app works out of the box."""
+    fallback model on the fly so the app works out of the box.
+
+    Important: the fallback is trained on ALL (a, b) pairs (no held-out
+    test set), so it's simply memorizing every possible input -- its job
+    is only to make the "Try it yourself" tab give correct, reliable
+    answers when no real checkpoint is available. It does NOT demonstrate
+    grokking itself; that's shown in the Training Curve tab using the
+    metrics from a real run (python demo.py --full).
+    """
     ckpt_path = "checkpoints/model.pt"
     if os.path.exists(ckpt_path):
         ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
@@ -47,16 +55,15 @@ def get_model():
         model.eval()
         return model, cfg.d_vocab - 1, True
 
-    # No checkpoint -> train a quick one now
+    # No checkpoint -> train a quick fallback on ALL pairs (fast, always correct)
     p = 13
     cfg = Config(d_vocab=p + 1, d_model=32, n_ctx=3, n_layers=1, n_heads=4, d_head=8, d_mlp=128)
     model = Transformer(cfg)
     inputs, labels = make_dataset(p=p)
-    train_in, train_lb, _, _ = train_test_split(inputs, labels, train_frac=0.5)
-    opt = torch.optim.AdamW(model.parameters(), lr=1e-2, weight_decay=0.5)
-    for _ in range(300):
-        logits = model(train_in)
-        loss = F.cross_entropy(logits[:, -1, :], train_lb)
+    opt = torch.optim.AdamW(model.parameters(), lr=1e-2, weight_decay=0.1, betas=(0.9, 0.98))
+    for _ in range(400):
+        logits = model(inputs)
+        loss = F.cross_entropy(logits[:, -1, :], labels)
         opt.zero_grad()
         loss.backward()
         opt.step()
@@ -72,8 +79,10 @@ st.caption("Companion demo for the [Mech Interp Lab](https://github.com/Vershita
 if not has_real_checkpoint:
     st.info(
         f"No trained checkpoint found in `checkpoints/model.pt`, so this demo trained a small "
-        f"model on the fly (mod {p} addition, ~300 steps) so everything below still works. "
-        f"For the real grokking result, run `python demo.py --full` first, then reload this app.",
+        f"fallback model on the fly (mod {p} addition, trained on all pairs) so the prediction "
+        f"tab gives correct answers out of the box. This fallback doesn't demonstrate grokking "
+        f"itself — for the real grokking result and training curve, run `python demo.py --full` "
+        f"first, then reload this app.",
         icon="ℹ️",
     )
 
